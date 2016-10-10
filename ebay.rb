@@ -1,7 +1,7 @@
 require 'net/http'
 require 'fileutils'
 		
-#whatever
+#whatever dude
 puts "What are you looking for?"
 productName = gets.chomp
 productName = productName.tr(' ', '+').to_s
