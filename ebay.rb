@@ -6,7 +6,7 @@ page_number = 1
 def ask_product_name
 	puts "What are you looking for?"
 	product_name = gets.chomp
-	product_name = productName.tr(' ', '+').to_s
+	product_name = product_name.tr(' ', '+').to_s
 end
 
 def ask_pages_to_scan
@@ -16,7 +16,7 @@ end
 
 def ask_markup
 	puts "Whats the Mark Up?"
-	markup = gets.chomp.to_i
+	markup = gets.chomp
 end
 
 def create_csv(product_name, number_of_pages_to_crawl, markup)
@@ -24,18 +24,30 @@ def create_csv(product_name, number_of_pages_to_crawl, markup)
 end
 
 def get_description_url(url)
-	uri = URI(url)
-	source = Net::HTTP.get(uri)
-	source.match(/http:\/\/vi.vipr.ebaydesc(.*?)descgauge=1/m)[0]
+  str = URI.escape(url)
+  uri = URI.parse(str)
+  html_source = Net::HTTP.get(uri)
+  html_source.match(/http:\/\/vi.vipr.ebaydesc(.*?)descgauge=1/m)[0]
 end
 
 def get_feature(url)
 	description_url = get_description_url(url)
-	str = URI.escape(description_url)
-  uri = URI.parse(str)
-	html_source = Net::HTTP.get(uri)
-	feature = html_source.match(/Feature(.*?)Package/m)[0]
-	clean_feature = feature.gsub(/<\/?[^>]*>/, "")
+  if !description_url.nil?
+    str = URI.escape(description_url)
+    uri = URI.parse(str)
+    html_source = Net::HTTP.get(uri)
+    feature = html_source.match(/Feature(.*?)Package/m)[0]
+    if feature.nil?
+      feature = html_source.match(/Basic Operations(.*?)Specifications/m)[0]
+    end
+    if feature.nil?
+      nil
+    end
+
+    clean_feature = feature.gsub(/<\/?[^>]*>/, "")
+  else 
+    nil
+  end
 end
 
 def start_scraping
@@ -50,59 +62,42 @@ end
 
 start_scraping
 
-while pgn <= pages_crawled do
-	uri = URI("http://www.ebay.com/sch/i.html?_nkw="+product_name+"&_pgn="+pgn.to_s+"&_ipg=200&rt=nc&LH_BIN=1&LH_ItemCondition=1000")
-	source = Net::HTTP.get(uri)
-	#class="gspr next" href="http://www.ebay.com/sch/Battery-Grips/29967/i.html?Brand=Meike&amp;_pgn=2&amp;_skc=200&amp;rt=nc"></a>
 
-	#Get the next button so we can redo
-	#the loop this must be inside the method
-	#Sept 19th 2016
-	# nextbtn = source.scan(/label=\"Next page of results\"(?:.*)href=\"(.*?)\"/m)
-	# p nextbt	n
-	products = source.scan(/class=\"sresult lvresult clearfix li(.*?)<\/li>/m)
-	n = 0
-	products.each do |x|
+def parse_product_source(product)
+  price = product.match(/bold\">(?:.*)\$(.*?)<\/span>/m)[1]
+  title = product.match(/class=\"vip\" title=\"(?:.*)\">(.*)(?:<\/a>)/m)[1]
+  pic = product.match(/thumbs(?:.*)images\/g\/(.*?)\/s-l/m)[1]
+  url = product.match(/http:\/\/www.ebay.com\/itm\/(.*?)\"/m)[1]
+  {price: price, title: title, pic: pic, url: url}
+end
 
-			scanprod = x[0]
-			#find price, title, pic, url
-			price = scanprod.match(/bold\">(?:.*)\$(.*?)<\/span>/m)
-			title = scanprod.match(/class=\"vip\" title=\"(?:.*)\">(.*)(?:<\/a>)/m)
-			pic = scanprod.match(/thumbs(?:.*)images\/g\/(.*?)\/s-l/m)
-			url = scanprod.match(/http:\/\/www.ebay.com\/itm\/(.*?)\"/m)
-		if(url == nil)
-			#break for promote products
+def get_product_list(product_name,page_number)
+  uri = URI("http://www.ebay.com/sch/i.html?_nkw="+product_name+"&_pgn="+page_number.to_s+"&_ipg=200&rt=nc&LH_BIN=1&LH_ItemCondition=1000")
+  source = Net::HTTP.get(uri)
+  source.scan(/class=\"sresult lvresult clearfix li(.*?)<\/li>/m)[0]
+end
+
+while page_number <= pages_crawled do
+
+
+  products = get_product_list(product_name,page_number)
+  
+	products.each_with_index do |product_source,index|
+    puts index
+    product = parse_product_source(product_source)
+
+		if product[:url].nil?
 			next
 		end
 
+    feature = get_feature(product[:url])
+    
+    if feature.nil?
+      next
+    end
 
-
-		#Get detail link
-		address = url[0]
-		str = URI.escape(address)
-	   	uri = URI.parse(str)
-		source2 = Net::HTTP.get(uri)
-		descurl = source2.match(/http:\/\/vi.vipr.ebaydesc(.*?)descgauge=1/m)
-		#Find link to description area
-		# uri = URI(descurl[0].to_s)
-		if(descurl == nil)
-			#break for promote products
-			next
-		end
-		address = descurl[0]
-		str = URI.escape(address)
-		uri = URI.parse(str)
-		source3 = Net::HTTP.get(uri)
-		#Find section for Feature and copy description
-		feat1 = source3.match(/Feature(.*?)Package/m)
-		if feat1 == nil
-			feat1 = source3.match(/Basic Operations(.*?)Specifications/m)
-		end
-		if feat1 == nil
-			next
-		end
 		#Clean HTML tags
-		cleandescription = feat1[0].gsub(/<\/?[^>]*>/, "").gsub(/\s+/, " ").gsub(/\t+/, " ").to_s
+		cleandescription = feature.gsub(/<\/?[^>]*>/, "").gsub(/\s+/, " ").gsub(/\t+/, " ").to_s
 		cleantitle = title[1].gsub(/<\/?[^>]*>/, "").gsub(/\s+/, " ").gsub(/\t+/, " ").to_s
 		#make sure there is no style tags
 		#remove nbsp
@@ -129,8 +124,6 @@ while pgn <= pages_crawled do
 			open("rubyoutput/"+product_name.to_s+"PS"+pages_crawled.to_s+"MU"+mark_up.to_s+".csv", 'a') do |f|
 				f.puts newline.to_s
 		end
-		n += 1
-		puts n
 	end
 	pgn += 1
 end
