@@ -1,40 +1,38 @@
 require 'net/http'
 require 'fileutils'
-		
+
 #whatever, bro
 
-puts "What are you looking for?"
-productName = gets.chomp
-productName = productName.tr(' ', '+').to_s
-puts "How many pages did you want to scan?"
-pagesCrawled = gets.chomp.to_i
-puts "Whats the MarkUp?"
-markUp = gets.chomp.to_i
-pgn = 1
+page_number = 1
 
-	# testing enviroment
-		# # address = descurl[0]
-		# # str = URI.escape(address)
-	# 	# uri = URI.parse(str)
+def ask_product_name
+	puts "What are you looking for?"
+	product_name = gets.chomp
+	product_name = productName.tr(' ', '+').to_s
+end
 
-		# uri = URI("http://www.ebay.com/itm/Meike-MK-28mm-F2-8-Large-Aperture-Manual-Focus-Lens-for-Sony-E-Mount-NEX3-3N-5-6-/252504383955?hash=item3aca6f21d3:g:lXkAAOSw0UdXtV~Y")
-		# # uri = URI("http://vi.vipr.ebaydesc.com/ws/eBayISAPI.dll?ViewItemDescV4&item=252080123937&t=1443172783000&tid=10&category=48515&seller=meidike88&excSoj=1&excTrk=1&lsite=0&ittenable=false&domain=ebay.com&descgauge=1")
-		# source = Net::HTTP.get(uri)
-		# #Get detail link
-		# puts descurl = source.match(/http:\/\/vi.vipr.ebaydesc(.*?)descgauge=1/m)
-		# #Find link to description area
-		# # uri = URI(descurl[0].to_s)
-		# address = descurl[0]
-		# str = URI.escape(address)
-	#    uri = URI.parse(str)
-		# source2 = Net::HTTP.get(uri)
-		# #Find section for Feature and copy description
-		# puts feat1 = source2.match(/Feature(.*?)Package/m)
-		# #Clean HTML tags
-		# cleandesription = feat1[0].gsub(/<\/?[^>]*>/, "")
-	# end testing enviroment
+def ask_pages_to_scan
+	puts "How many pages did you want to scan?"
+	pages_to_scan = gets.chomp.to_i
+end
 
-	File.write("rubyoutput/"+productName.to_s+"PS"+pagesCrawled.to_s+"MU"+markUp.to_s+".csv", "")
+def ask_markup
+	puts "Whats the Mark Up?"
+	markup = gets.chomp.to_i
+end
+
+def create_csv(product_name, number_of_pages_to_crawl, markup)
+	File.write("rubyoutput/" + product_name + "PS" + number_of_pages_to_crawl + "MU" + markup + ".csv", "")
+end
+
+def start_program
+	product_name = ask_product_name
+	pages_to_scan = ask_pages_to_scan
+	markup = ask_markup
+	create_csv(product_name, pages_to_scan, markup)
+end
+
+start_program
 
 while pgn <= pagesCrawled do
 	uri = URI("http://www.ebay.com/sch/i.html?_nkw="+productName+"&_pgn="+pgn.to_s+"&_ipg=200&rt=nc&LH_BIN=1&LH_ItemCondition=1000")
