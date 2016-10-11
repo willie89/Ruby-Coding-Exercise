@@ -1,8 +1,6 @@
 require 'net/http'
 require 'fileutils'
 
-#whatever, bro
-
 page_number = 1
 
 def ask_product_name
@@ -25,17 +23,35 @@ def create_csv(product_name, number_of_pages_to_crawl, markup)
 	File.write("rubyoutput/" + product_name + "PS" + number_of_pages_to_crawl + "MU" + markup + ".csv", "")
 end
 
-def start_program
+def get_description_url(url)
+	uri = URI(url)
+	source = Net::HTTP.get(uri)
+	source.match(/http:\/\/vi.vipr.ebaydesc(.*?)descgauge=1/m)[0]
+end
+
+def get_feature(url)
+	description_url = get_description_url(url)
+	str = URI.escape(description_url)
+  uri = URI.parse(str)
+	html_source = Net::HTTP.get(uri)
+	feature = html_source.match(/Feature(.*?)Package/m)[0]
+	clean_feature = feature.gsub(/<\/?[^>]*>/, "")
+end
+
+def start_scraping
 	product_name = ask_product_name
 	pages_to_scan = ask_pages_to_scan
 	markup = ask_markup
 	create_csv(product_name, pages_to_scan, markup)
 end
 
-start_program
+# test_url = "http://www.ebay.com/itm/Meike-MK-28mm-F2-8-Large-Aperture-Manual-Focus-Lens-for-Sony-E-Mount-NEX3-3N-5-6-/252504383955?hash=item3aca6f21d3:g:lXkAAOSw0UdXtV~Y"
+# get_feature(test_url)
 
-while pgn <= pagesCrawled do
-	uri = URI("http://www.ebay.com/sch/i.html?_nkw="+productName+"&_pgn="+pgn.to_s+"&_ipg=200&rt=nc&LH_BIN=1&LH_ItemCondition=1000")
+start_scraping
+
+while pgn <= pages_crawled do
+	uri = URI("http://www.ebay.com/sch/i.html?_nkw="+product_name+"&_pgn="+pgn.to_s+"&_ipg=200&rt=nc&LH_BIN=1&LH_ItemCondition=1000")
 	source = Net::HTTP.get(uri)
 	#class="gspr next" href="http://www.ebay.com/sch/Battery-Grips/29967/i.html?Brand=Meike&amp;_pgn=2&amp;_skc=200&amp;rt=nc"></a>
 
@@ -104,13 +120,13 @@ while pgn <= pagesCrawled do
 		def write_to_csv price,title,pic,cleantitle
 			if price[1] != nil && title[1] != nil && pic[1] != nil && cleantitle != nil
 				puts pricetag = price[1].gsub(/<\/?[^>]*>/, "")
-				pricetagint = pricetag.to_i*(1 + markUp/100.00)
+				pricetagint = pricetag.to_i*(1 + mark_up/100.00)
 				pricetag = pricetagint.to_s
 				newline = "http://i.ebayimg.com/images/g/"+pic[1]+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
 			end
 
 			#open file and print to csv file
-			open("rubyoutput/"+productName.to_s+"PS"+pagesCrawled.to_s+"MU"+markUp.to_s+".csv", 'a') do |f|
+			open("rubyoutput/"+product_name.to_s+"PS"+pages_crawled.to_s+"MU"+mark_up.to_s+".csv", 'a') do |f|
 				f.puts newline.to_s
 		end
 		n += 1
@@ -121,11 +137,11 @@ end
 
 # class ebayRipper
 
-# 	def initialize(productName,pagesCrawled,markUp,x)
+# 	def initialize(product_name,pages_crawled,mark_up,x)
 # 		@x = x
-# 		@productName = productName
-# 		@pagesCrawled = pagesCrawled
-# 		@markUp = markUp
+# 		@product_name = product_name
+# 		@pages_crawled = pages_crawled
+# 		@mark_up = mark_up
 # 	end
 
 # 	get
