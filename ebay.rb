@@ -1,43 +1,41 @@
 require 'net/http'
 require 'fileutils'
-		
-#whatever, bro
 
+#test est test
+		
 puts "What are you looking for?"
-productName = gets.chomp
-productName = productName.tr(' ', '+').to_s
+product_name = gets.chomp
+product_name = product_name.tr(' ', '+').to_s
 puts "How many pages did you want to scan?"
-pagesCrawled = gets.chomp.to_i
-puts "Whats the MarkUp?"
-markUp = gets.chomp.to_i
+pages_crawled = gets.chomp.to_i
+puts "Whats the Mark up?"
+mark_up = gets.chomp.to_i
 pgn = 1
 
-	# testing enviroment
-		# # address = descurl[0]
-		# # str = URI.escape(address)
-	# 	# uri = URI.parse(str)
+def get_description_url(url)
+	uri = URI(url)
+	source = Net::HTTP.get(uri)
+	source.match(/http:\/\/vi.vipr.ebaydesc(.*?)descgauge=1/m)[0]		
+end
 
-		# uri = URI("http://www.ebay.com/itm/Meike-MK-28mm-F2-8-Large-Aperture-Manual-Focus-Lens-for-Sony-E-Mount-NEX3-3N-5-6-/252504383955?hash=item3aca6f21d3:g:lXkAAOSw0UdXtV~Y")
-		# # uri = URI("http://vi.vipr.ebaydesc.com/ws/eBayISAPI.dll?ViewItemDescV4&item=252080123937&t=1443172783000&tid=10&category=48515&seller=meidike88&excSoj=1&excTrk=1&lsite=0&ittenable=false&domain=ebay.com&descgauge=1")
-		# source = Net::HTTP.get(uri)
-		# #Get detail link
-		# puts descurl = source.match(/http:\/\/vi.vipr.ebaydesc(.*?)descgauge=1/m)
-		# #Find link to description area
-		# # uri = URI(descurl[0].to_s)
-		# address = descurl[0]
-		# str = URI.escape(address)
-	#    uri = URI.parse(str)
-		# source2 = Net::HTTP.get(uri)
-		# #Find section for Feature and copy description
-		# puts feat1 = source2.match(/Feature(.*?)Package/m)
-		# #Clean HTML tags
-		# cleandesription = feat1[0].gsub(/<\/?[^>]*>/, "")
-	# end testing enviroment
+def get_feature(url)
+	description_url = get_description_url(url)
+	str = URI.escape(description_url)
+  uri = URI.parse(str)
+	html_source = Net::HTTP.get(uri)
+	feature = html_source.match(/Feature(.*?)Package/m)[0]
+	clean_feature = feature.gsub(/<\/?[^>]*>/, "")			
+end
 
-	File.write("rubyoutput/"+productName.to_s+"PS"+pagesCrawled.to_s+"MU"+markUp.to_s+".csv", "")
+# test_url = "http://www.ebay.com/itm/Meike-MK-28mm-F2-8-Large-Aperture-Manual-Focus-Lens-for-Sony-E-Mount-NEX3-3N-5-6-/252504383955?hash=item3aca6f21d3:g:lXkAAOSw0UdXtV~Y"
+# get_feature(test_url)
 
-while pgn <= pagesCrawled do
-	uri = URI("http://www.ebay.com/sch/i.html?_nkw="+productName+"&_pgn="+pgn.to_s+"&_ipg=200&rt=nc&LH_BIN=1&LH_ItemCondition=1000")
+
+
+	File.write("rubyoutput/"+product_name.to_s+"PS"+pages_crawled.to_s+"MU"+mark_up.to_s+".csv", "")
+
+while pgn <= pages_crawled do
+	uri = URI("http://www.ebay.com/sch/i.html?_nkw="+product_name+"&_pgn="+pgn.to_s+"&_ipg=200&rt=nc&LH_BIN=1&LH_ItemCondition=1000")
 	source = Net::HTTP.get(uri)
 	#class="gspr next" href="http://www.ebay.com/sch/Battery-Grips/29967/i.html?Brand=Meike&amp;_pgn=2&amp;_skc=200&amp;rt=nc"></a>
 
@@ -106,13 +104,13 @@ while pgn <= pagesCrawled do
 		def write_to_csv price,title,pic,cleantitle
 			if price[1] != nil && title[1] != nil && pic[1] != nil && cleantitle != nil
 				puts pricetag = price[1].gsub(/<\/?[^>]*>/, "")
-				pricetagint = pricetag.to_i*(1 + markUp/100.00)
+				pricetagint = pricetag.to_i*(1 + mark_up/100.00)
 				pricetag = pricetagint.to_s
 				newline = "http://i.ebayimg.com/images/g/"+pic[1]+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
 			end
 
 			#open file and print to csv file
-			open("rubyoutput/"+productName.to_s+"PS"+pagesCrawled.to_s+"MU"+markUp.to_s+".csv", 'a') do |f|
+			open("rubyoutput/"+product_name.to_s+"PS"+pages_crawled.to_s+"MU"+mark_up.to_s+".csv", 'a') do |f|
 				f.puts newline.to_s
 		end
 		n += 1
@@ -123,11 +121,11 @@ end
 
 # class ebayRipper
 
-# 	def initialize(productName,pagesCrawled,markUp,x)
+# 	def initialize(product_name,pages_crawled,mark_up,x)
 # 		@x = x
-# 		@productName = productName
-# 		@pagesCrawled = pagesCrawled
-# 		@markUp = markUp
+# 		@product_name = product_name
+# 		@pages_crawled = pages_crawled
+# 		@mark_up = mark_up
 # 	end
 
 # 	get
