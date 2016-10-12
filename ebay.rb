@@ -23,9 +23,9 @@ def create_csv(product_name, number_of_pages_to_crawl, markup)
 end
 
 def get_description_url(url)
-  puts str = URI.escape(url)
-  puts uri = URI.parse(str)
-  puts html_source = Net::HTTP.get(uri)
+  str = URI.escape(url)
+  uri = URI.parse(str)
+  html_source = Net::HTTP.get(uri)
   html_source.match(/http:\/\/vi.vipr.ebaydesc(.*?)descgauge=1/m)[0]
 end
 
@@ -34,7 +34,7 @@ def get_feature(url)
   if !description_url.nil?
     str = URI.escape(description_url)
     uri = URI.parse(str)
-    puts html_source = Net::HTTP.get(uri)
+    html_source = Net::HTTP.get(uri)
     feature = html_source.match(/Feature(.*?)Package/m)[0]
     if feature.nil?
       feature = html_source.match(/Basic Operations(.*?)Specifications/m)[0]
@@ -63,7 +63,7 @@ end
 
 def write_to_csv(price,cleantitle,pic,mark_up,cleandescription,product_name,pages_crawled)
   if !price.nil? && !pic.nil? && !cleantitle.nil?
-    puts pricetag = price.gsub(/<\/?[^>]*>/, "")
+    pricetag = price.gsub(/<\/?[^>]*>/, "")
     pricetagint = pricetag.to_i*(1 + mark_up/100.00)
     pricetag = pricetagint.to_s
     newline = "http://i.ebayimg.com/images/g/"+pic+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
@@ -99,7 +99,6 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
       products = get_product_list(product_name,page_number)
       
       products.each_with_index do |product_source,index|
-        puts index
         product = parse_product_source(product_source)
 
         if product[:url].nil?
