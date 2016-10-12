@@ -34,7 +34,7 @@ def get_feature(url)
   if !description_url.nil?
     str = URI.escape(description_url)
     uri = URI.parse(str)
-    html_source = Net::HTTP.get(uri)
+    puts html_source = Net::HTTP.get(uri)
     feature = html_source.match(/Feature(.*?)Package/m)[0]
     if feature.nil?
       feature = html_source.match(/Basic Operations(.*?)Specifications/m)[0]
@@ -61,12 +61,12 @@ def start_scraping
   scrape_page(starting_page_number, pages_to_scan,product_name, markup)
 end
 
-def write_to_csv(price,title,pic,cleantitle,mark_up,cleandescription)
-  if price != nil && title != nil && pic != nil && cleantitle != nil
-    puts pricetag = price[1].gsub(/<\/?[^>]*>/, "")
+def write_to_csv(price,cleantitle,pic,mark_up,cleandescription,product_name,pages_crawled)
+  if !price.nil? && !pic.nil? && !cleantitle.nil?
+    puts pricetag = price.gsub(/<\/?[^>]*>/, "")
     pricetagint = pricetag.to_i*(1 + mark_up/100.00)
     pricetag = pricetagint.to_s
-    newline = "http://i.ebayimg.com/images/g/"+pic[1]+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
+    newline = "http://i.ebayimg.com/images/g/"+pic+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
   end
 
   #open file and print to csv file
@@ -125,8 +125,8 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
         if price.length < 2 or title.length < 10 or pic.length < 10 or cleandescription.length < 10
           next
         end
-        
-        write_to_csv(price,title,pic,cleantitle,mark_up,cleandescription)
+        #def write_to_csv(price,cleantitle,pic,mark_up,cleandescription)
+        write_to_csv(price,cleantitle,pic,mark_up,cleandescription,product_name,pages_to_scan)
 
         #Check if price and title are filled if they are not then ignore the post
         #They are empty if its a sponsored item or not a correct list item
