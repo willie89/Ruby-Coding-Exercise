@@ -61,18 +61,19 @@ def start_scraping
   scrape_page(starting_page_number, pages_to_scan,product_name, markup)
 end
 
-        def write_to_csv(price,title,pic,cleantitle)
-          if price != nil && title != nil && pic != nil && cleantitle != nil
-            puts pricetag = price[1].gsub(/<\/?[^>]*>/, "")
-            pricetagint = pricetag.to_i*(1 + mark_up/100.00)
-            pricetag = pricetagint.to_s
-            newline = "http://i.ebayimg.com/images/g/"+pic[1]+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
-          end
+def write_to_csv(price,title,pic,cleantitle,mark_up,cleandescription)
+  if price != nil && title != nil && pic != nil && cleantitle != nil
+    puts pricetag = price[1].gsub(/<\/?[^>]*>/, "")
+    pricetagint = pricetag.to_i*(1 + mark_up/100.00)
+    pricetag = pricetagint.to_s
+    newline = "http://i.ebayimg.com/images/g/"+pic[1]+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
+  end
 
-          #open file and print to csv file
-          open("rubyoutput/"+product_name.to_s+"PS"+pages_crawled.to_s+"MU"+mark_up.to_s+".csv", 'a') do |f|
-          f.puts newline.to_s
-        end
+  #open file and print to csv file
+  open("rubyoutput/"+product_name.to_s+"PS"+pages_crawled.to_s+"MU"+mark_up.to_s+".csv", 'a') do |f|
+  f.puts newline.to_s
+  end
+end
 
 def parse_product_source(product)
   price = product.match(/bold\">(?:.*)\$(.*?)<\/span>/m)[1]
@@ -81,7 +82,6 @@ def parse_product_source(product)
   url = product.match(/http:\/\/www.ebay.com\/itm\/(.*?)\"/m)[0]
   {price: price, title: title, pic: pic, url: url}
 end
-
 def get_clean_text(source)
   source.gsub(/<\/?[^>]*>/, "").gsub(/\s+/, " ").gsub(/\t+/, " ").to_s
 end
@@ -126,18 +126,16 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
           next
         end
         
-        write_to_csv(price,title,pic,cleantitle)
+        write_to_csv(price,title,pic,cleantitle,mark_up,cleandescription)
 
         #Check if price and title are filled if they are not then ignore the post
         #They are empty if its a sponsored item or not a correct list item
 
       end
       current_page += 1
-    end
   end
 end
-
+start_scraping
 # test_url = "http://www.ebay.com/itm/Meike-MK-28mm-F2-8-Large-Aperture-Manual-Focus-Lens-for-Sony-E-Mount-NEX3-3N-5-6-/252504383955?hash=item3aca6f21d3:g:lXkAAOSw0UdXtV~Y"
 # get_feature(test_url)
 
-start_scraping
