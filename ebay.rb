@@ -35,15 +35,17 @@ def get_feature(url)
     str = URI.escape(description_url)
     uri = URI.parse(str)
     html_source = Net::HTTP.get(uri)
-    feature = html_source.match(/Feature(.*?)Package/m)[0]
-    if feature.nil?
-      feature = html_source.match(/Basic Operations(.*?)Specifications/m)[0]
+    feature_match = html_source.match(/Feature(.*?)Package/m)
+    if feature_match.nil?
+      feature_match = html_source.match(/Basic Operations(.*?)Specifications/m)
     end
-    if feature.nil?
+    if feature_match.nil?
       nil
     end
-
-    clean_feature = feature.gsub(/<\/?[^>]*>/, "")
+    if !feature_match.nil?
+      feature = feature_match[0]
+      clean_feature = feature.gsub(/<\/?[^>]*>/, "")
+    end
   else 
     nil
   end
@@ -76,11 +78,17 @@ def write_to_csv(price,cleantitle,pic,mark_up,cleandescription,product_name,page
 end
 
 def parse_product_source(product)
-  price = product.match(/bold\">(?:.*)\$(.*?)<\/span>/m)[1]
-  title = product.match(/class=\"vip\" title=\"(?:.*)\">(.*)(?:<\/a>)/m)[1]
-  pic = product.match(/thumbs(?:.*)images\/g\/(.*?)\/s-l/m)[1]
-  url = product.match(/http:\/\/www.ebay.com\/itm\/(.*?)\"/m)[0]
-  {price: price, title: title, pic: pic, url: url}
+  #not sure why this is an array...
+  price = product[0].match(/bold\">(?:.*)\$(.*?)<\/span>/m)
+  title = product[0].match(/class=\"vip\" title=\"(?:.*)\">(.*)(?:<\/a>)/m)
+  pic = product[0].match(/thumbs(?:.*)images\/g\/(.*?)\/s-l/m)
+  url = product[0].match(/http:\/\/www.ebay.com\/itm\/(.*?)\"/m)
+  if !price.nil? && !title.nil? && !pic.nil? && !url.nil?
+    #is there a better way to get [0] only when match is true
+    {price: price[1], title: title[1], pic: pic[1], url: url[0]}
+  else
+    {price: nil, title: nil, pic: nil, url: nil}
+  end
 end
 def get_clean_text(source)
   source.gsub(/<\/?[^>]*>/, "").gsub(/\s+/, " ").gsub(/\t+/, " ").to_s
@@ -89,7 +97,7 @@ end
 def get_product_list(product_name,page_number)  
   uri = URI("http://www.ebay.com/sch/i.html?_nkw="+product_name+"&_pgn="+page_number.to_s+"&_ipg=200&rt=nc&LH_BIN=1&LH_ItemCondition=1000")
   source = Net::HTTP.get(uri)
-  source.scan(/class=\"sresult lvresult clearfix li(.*?)<\/li>/m)[0]
+  source.scan(/class=\"sresult lvresult clearfix li(.*?)<\/li>/m)
 end
 
 def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
@@ -97,8 +105,8 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
   while current_page <= pages_to_scan do
       page_number = current_page
       products = get_product_list(product_name,page_number)
-      
-      products.each_with_index do |product_source,index|
+      products.each do |product_source|
+        puts product_source
         product = parse_product_source(product_source)
 
         if product[:url].nil?
@@ -107,7 +115,7 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
 
         feature = get_feature(product[:url])
         title   = product[:title]
-        price   = product[:price]
+        puts price   = product[:price]
         pic     = product[:pic]
         
         if feature.nil?
@@ -131,8 +139,9 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
         #They are empty if its a sponsored item or not a correct list item
 
       end
-      current_page += 1
   end
+      puts current_page
+      current_page = current_page + 1
 end
 start_scraping
 # test_url = "http://www.ebay.com/itm/Meike-MK-28mm-F2-8-Large-Aperture-Manual-Focus-Lens-for-Sony-E-Mount-NEX3-3N-5-6-/252504383955?hash=item3aca6f21d3:g:lXkAAOSw0UdXtV~Y"
