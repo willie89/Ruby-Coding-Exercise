@@ -63,7 +63,7 @@ end
 def write_to_csv(price,cleantitle,pic,mark_up,cleandescription,product_name,pages_crawled)
   if !price.nil? && !pic.nil? && !cleantitle.nil?
     pricetag = price.gsub(/<\/?[^>]*>/, "")
-    pricetagint = pricetag.to_i*(1 + mark_up/100.00)
+    pricetagint = pricetag.to_i*(1 + mark_up.to_i/100.00)
     pricetag = pricetagint.to_s
     newline = "http://i.ebayimg.com/images/g/"+pic+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
   end
@@ -103,7 +103,6 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
       page_number = current_page
       products = get_product_list(product_name,page_number)
       products.each do |product_source|
-        puts product_source
         product = parse_product_source(product_source)
 
         if product[:url].nil?
@@ -112,7 +111,7 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
 
         feature = get_feature(product[:url])
         title   = product[:title]
-        puts price   = product[:price]
+        price   = product[:price]
         pic     = product[:pic]
         
         if feature.nil?
@@ -131,6 +130,7 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
         end
         #def write_to_csv(price,cleantitle,pic,mark_up,cleandescription)
         write_to_csv(price,cleantitle,pic,mark_up,cleandescription,product_name,pages_to_scan)
+        puts "done"
       end
   end
       puts current_page
