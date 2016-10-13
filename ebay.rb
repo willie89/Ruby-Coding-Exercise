@@ -52,12 +52,9 @@ def get_feature(url)
 end
 
 def start_scraping
-  # product_name = ask_product_name
-  # pages_to_scan = ask_pages_to_scan
-  # markup = ask_markup
-  product_name = "meike"
-  pages_to_scan = 2
-  markup = 20
+  product_name = ask_product_name
+  pages_to_scan = ask_pages_to_scan
+  markup = ask_markup
   create_csv(product_name, pages_to_scan, markup)
   starting_page_number = 1
   scrape_page(starting_page_number, pages_to_scan,product_name, markup)
@@ -84,7 +81,7 @@ def parse_product_source(product)
   pic = product[0].match(/thumbs(?:.*)images\/g\/(.*?)\/s-l/m)
   url = product[0].match(/http:\/\/www.ebay.com\/itm\/(.*?)\"/m)
   if !price.nil? && !title.nil? && !pic.nil? && !url.nil?
-    #is there a better way to get [0] only when match is true
+    # is there a better way to get [0] only when match is true
     {price: price[1], title: title[1], pic: pic[1], url: url[0]}
   else
     {price: nil, title: nil, pic: nil, url: nil}
@@ -134,16 +131,10 @@ def scrape_page(starting_page, pages_to_scan, product_name, mark_up)
         end
         #def write_to_csv(price,cleantitle,pic,mark_up,cleandescription)
         write_to_csv(price,cleantitle,pic,mark_up,cleandescription,product_name,pages_to_scan)
-
-        #Check if price and title are filled if they are not then ignore the post
-        #They are empty if its a sponsored item or not a correct list item
-
       end
   end
       puts current_page
       current_page = current_page + 1
 end
 start_scraping
-# test_url = "http://www.ebay.com/itm/Meike-MK-28mm-F2-8-Large-Aperture-Manual-Focus-Lens-for-Sony-E-Mount-NEX3-3N-5-6-/252504383955?hash=item3aca6f21d3:g:lXkAAOSw0UdXtV~Y"
-# get_feature(test_url)
 
