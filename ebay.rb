@@ -2,6 +2,10 @@ require 'net/http'
 require 'fileutils'
 require 'pry'
 
+def get_tags
+  #get category tags for 
+end
+
 def ask_product_name
   puts "What are you looking for?"
   product_name = gets.chomp
@@ -62,9 +66,15 @@ end
 
 def write_to_csv(price,cleantitle,pic,mark_up,cleandescription,product_name,pages_crawled)
   if !price.nil? && !pic.nil? && !cleantitle.nil?
-    pricetag = price.gsub(/<\/?[^>]*>/, "")
-    pricetagint = pricetag.to_i*(1 + mark_up.to_i/100.00)
+    pricetag = price.gsub(/,/, "").gsub(/<\/?[^>]*>/, "")
+    pricetagint = pricetag.to_i*(1 + mark_up.to_i/100.00).round(-1)
     pricetag = pricetagint.to_s
+    digit = pricetag.round(0).size
+    if digit > 2
+      pricetag.round(-1)
+    else
+      pricetag.round(0)
+    end
     newline = "http://i.ebayimg.com/images/g/"+pic+'/s-l1000.jpg, '+'"'+cleantitle[0...50]+'"'+'"'+cleantitle+'"'+', $' + pricetag+','+'"'+cleandescription+'"'+'\n'
   end
 
@@ -83,7 +93,7 @@ def parse_product_source(product)
   if !price.nil? && !title.nil? && !pic.nil? && !url.nil?
     # is there a better way to get [0] only when match is true
     {price: price[1], title: title[1], pic: pic[1], url: url[0]}
-  else
+  else 
     {price: nil, title: nil, pic: nil, url: nil}
   end
 end
