@@ -4,4 +4,4 @@
 http://rogerdudler.github.io/git-guide/
 
 **Crash Course on Learning Theory**
-chrome.google.com/webstore/detail/dayboard-new-tab-page/kimodcegbhclamjcbifgfaldeengbgij?hl=en
+ chrome.google.com/webstore/detail/dayboard-new-tab-page/kimodcegbhclamjcbifgfaldeengbgij?hl=en
