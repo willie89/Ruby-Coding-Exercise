@@ -3,7 +3,10 @@ require 'fileutils'
 require 'pry'
 
 def get_tags
-  #get category tags for 
+  #get tags
+  #get tags
+  #get tags
+  
 end
 
 def ask_product_name
